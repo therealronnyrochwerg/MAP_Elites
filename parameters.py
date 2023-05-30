@@ -19,4 +19,13 @@ class Parameters:
         # rates of recombination (inverse rate for mutation)
         self.recom_rate = 0.5
 
+        # matrix of centroids used for CVT-MAP-Elites
+        self.centroids = None
+
+        # number of niches for CVT-MAP-elites
+        self.num_niches = None
+
+        # seed for random generation things, used for reproducibility
+        self.seed = None
+
 

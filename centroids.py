@@ -2,7 +2,12 @@ from scipy.spatial import distance as dist
 from numpy.random import default_rng
 from numpy.linalg import matrix_rank, norm
 import numpy as np
+import timeit
 
+# function to create a matrix of centroids
+def create_centroids(num, dim, seed = None):
+    ind_vec = lin_independent_vectors(num, dim, seed=seed)
+    return gram_schmidt(ind_vec)
 
 # generates linearly independent vectors and returns them in a matrix that is mxn
 # this gives n vectors of dimension m
@@ -35,26 +40,37 @@ def gram_schmidt(A):
         A[:, j] = A[:, j] / norm(A[:, j])
     return A
 
+# finds teh closest centroid to a vector using cosine distance
 def closest_centroid(centroids, vector):
-    pass
+    vector = np.array([vector])
+    distances = dist.cdist(centroids, vector, 'cosine')
 
+    return np.argmin(distances)
+
+#above is faster, keeping this just in case (above calcs distance into a 2d ndarray)
+# def closest_centroid2(centroids, vector):
+#     distances = np.dot(centroids,vector)/(norm(centroids, axis=1)*norm(vector))
+#
+#     return np.argmax(distances)
+
+# shifts a centroid when a vector is added to a niche. centroid should be the chosen centroid, not all of them
+# The shift is the vector between the two, can add weights later if needed (shift closer to centroid for example)
+def shift_centroid(centroid, vector):
+    centroid_unit = centroid / norm(centroid)
+    vector_unit = vector / norm(vector)
+
+    print(centroid_unit)
+    print(vector_unit)
+    return  centroid_unit + vector_unit
 
 if __name__ == '__main__':
-    # lin_ind = lin_independent_vectors(10,5, seed=1)
-    # print((lin_ind[:,1] - (dot(lin_ind[:,0], lin_ind[:,1]) * lin_ind[:, 0])),
-    #       '\n')
-    # orth = gram_schmidt(lin_ind)
-    # for i in range(orth.shape[1]):
-    #     for y in range(i, orth.shape[1]):
-    #         print(1 - dist.cosine(orth[:,i],orth[:,y]), '\n')
-    # print()
-    #
-    # print(lin_ind, '\n')
-    # print(orth)
-    testy = [[1,2,3,4],[-1,-2,-3,-4],[-4,-3,2,1]]
-    print(type(testy))
     testy = np.array([[1, 2, 3, 4], [-1, -2, -3, -4], [-4, -3, 2, 1]])
-    print(type(testy))
-    testy2 = np.array([[1,2,3,4]])
-    print(dist.cdist(testy2,testy,'cosine'))
+
+    test2 = np.array([1,2,3,4])
+
+    testy = np.array([1,1])
+    test2 = np.array([-1,1])
+
+    print(shift_centroid(testy, test2))
+
 
