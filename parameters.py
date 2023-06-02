@@ -5,7 +5,7 @@ class Parameters:
     def __init__(self):
         self.model = LGP
 
-        #"reg" for MAP-Elites, "CVT" for CVT-MAP-Elites
+        #"reg" for MAP_Elites, "CVT" for CVT-MAP_Elites
         self.type = "reg"
 
         #number of individuals to initialize with
@@ -19,7 +19,7 @@ class Parameters:
         # rates of recombination (inverse rate for mutation)
         self.recom_rate = 0.5
 
-        # matrix of centroids used for CVT-MAP-Elites
+        # matrix of centroids used for CVT-MAP_Elites
         self.centroids = None
 
         # number of niches for CVT-MAP-elites
