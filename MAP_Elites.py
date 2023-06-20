@@ -1,21 +1,15 @@
-from parameters import Parameters
-from parent_selection import select_parent
-from random import random
-from centroids import create_centroids, closest_centroid, shift_centroid
+from .parent_selection import select_parent
+from .centroids import create_centroids, closest_centroid, shift_centroid
 
 class MAPElites (object):
 
     # model is a reference to a class for the model (like LGP)
-    def __init__(self, input_data, target_data, num_features, num_samples):
-        self.param = Parameters()
-        self.input_data = input_data
-        self.target_data = target_data
-
-        #number of features in the input data (needed for LGP models)
-        self.num_features = num_features
-
-        # the number of samples in the input data (sued for behavior vector size)
-        self.num_samples = num_samples
+    def __init__(self, param):
+        self.param = param
+        # matrix of centroids used for CVT-MAP_Elites
+        self.centroids = None
+        if self.param.type == 'CVT':
+            self.niche_popularity = [0] * self.param.num_niches
 
         # dictionary where the keys are the behaviours and the values are the models and their fitness
         self.mapE = {}
@@ -35,18 +29,19 @@ class MAPElites (object):
         # if the type is CVT map elites
         elif self.param.type == "CVT":
             # find the centroid the individual is closest to
-            chosen_centroid = closest_centroid(self.param.centroids, individual.behavior)
+            chosen_centroid = closest_centroid(self.centroids, individual.behavior)
+            self.niche_popularity[chosen_centroid] += 1
             # if there is already an individual in the niche
             if self.mapE[chosen_centroid]:
                 # if the new individual has higher fitness
                 if individual.fitness > self.mapE[chosen_centroid].fitness:
                     # replace the old individual and shift the centroid according the new behavior
                     self.mapE[chosen_centroid] = individual
-                    self.param.centroids[chosen_centroid] = shift_centroid(self.param.centroids[chosen_centroid], individual.behavior)
+                    self.centroids[chosen_centroid] = shift_centroid(self.centroids[chosen_centroid], individual.behavior)
             else:
                 # if there is no individual, add and shift
                 self.mapE[chosen_centroid] = individual
-                self.param.centroids[chosen_centroid] = shift_centroid(self.param.centroids[chosen_centroid],
+                self.centroids[chosen_centroid] = shift_centroid(self.centroids[chosen_centroid],
                                                                        individual.behavior)
         else:
             quit("incompatible type in parameters")
@@ -56,42 +51,35 @@ class MAPElites (object):
         # if type is CVT have to initialize the centroids
         if self.param.type == "CVT":
             self.mapE = dict.fromkeys(range(self.param.num_niches))
-            self.param.centroids = create_centroids(self.param.num_niches, self.num_samples, seed=self.param.seed)
+            self.centroids = create_centroids(self.param.num_samples, self.param.num_niches, self.param.rng)
 
         # adding the first generation fo individuals
         for i in range(self.param.pop_init_amount):
-            individual = self.param.model(self.num_features)
+            individual = self.param.model(self.param.model_param)
+            individual.initialize(self.param.input_data, self.param.target_data, name = i)
             self.add_individual(individual)
 
     # simulates one generation, creates children and adds them to the map
     def sim_generation(self):
-        #list of parents
-        parents = select_parent(self.param,self.mapE)
-        # flag for if rest of parents require mutation (cannot do recombination)
-        mutate = False
-        # going through all selected parents to create offspring for the generation
-        while parents:
-            # choosing between mutation or recombination
-            if mutate or len(parents) == 1 or random() > self.param.recom_rate:
-                p1 = parents.pop(0)
-                c1 = p1.mutate_child(self.input_data, self.target_data)
-                self.add_individual(c1)
+        for i in range(self.param.generation_amount//2):
+            #list of parents
+            parents = select_parent(self.param, self.mapE)
+            child1 = parents[0].make_copy()
+            child2 = parents[1].make_copy()
+            if self.param.rng.random() < self.param.recom_rate:
+                child1.recombine(child2)
+            elif self.param.rng.random() < self.param.mut_rate:
+                child1.mutate()
+                child2.mutate()
+
+            child1.evaluate(self.param.input_data, self.param.target_data)
+            child2.evaluate(self.param.input_data, self.param.target_data)
+            self.add_individual(child1)
+            self.add_individual(child2)
+
+    def print_map(self):
+        for behaviour, model in self.mapE.items():
+            if model:
+                print(self.centroids[behaviour], model.fitness)
             else:
-                p1 = parents.pop(0)
-                # if all the remaining parents are the same individual, force mutation for all remaining
-                if parents.count(p1) == len(parents):
-                    mutate = True
-                    c1 = p1.mutate_child(self.input_data, self.target_data)
-                    self.add_individual(c1)
-                # otherwise, do recombination
-                else:
-                    p2 = parents.pop(0)
-
-                    # if the two selected parents are the same keep searching for a different parent
-                    while p1 == p2:
-                        parents.append(p2)
-                        p2 = parents.pop(0)
-
-                    c1, c2 = p1.recombine_child(p2, self.input_data, self.target_data)
-                    self.add_individual(c1)
-                    self.add_individual(c2)
+                print(self.centroids[behaviour], None)
