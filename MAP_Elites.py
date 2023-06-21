@@ -80,6 +80,6 @@ class MAPElites (object):
     def print_map(self):
         for behaviour, model in self.mapE.items():
             if model:
-                print(self.centroids[behaviour], model.fitness)
+                print(behaviour, model.fitness)
             else:
-                print(self.centroids[behaviour], None)
+                print(behaviour, None)
