@@ -1,7 +1,7 @@
 from scipy.spatial import distance as dist
 from numpy.linalg import matrix_rank, norm
 import numpy as np
-from numpy.random import default_rng
+from numpy.random import default_rng, random
 
 # function to create a matrix of centroids
 def create_centroids(num_samples, num_niches, rng):
@@ -13,11 +13,11 @@ def create_centroids(num_samples, num_niches, rng):
 # for CVT-Elites, this would give m niches, and n would be the number of samples (error vector length)
 def lin_independent_vectors(m,n, rng):
     # initializing it to nxm because of array inside array works in python (this gives n arrays of length m)
-    vectors = rng.random((n, m))
+    vectors = 2 * rng.random((n, m)) - 1
     rank = matrix_rank(vectors)
 
     while rank < n:
-        vectors = rng.random((n, m))
+        vectors = 2 * rng.random((n, m)) - 1
         rank = matrix_rank(vectors)
 
 
