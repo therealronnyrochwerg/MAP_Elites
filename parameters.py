@@ -20,6 +20,9 @@ class Parameters:
 
         self.parent_selection_method = "random"
 
+        # lexicase or fitness
+        self.comparison_method = 'lexicase'
+
         # rates of recombination (inverse rate for mutation)
         self.recom_rate = 0.9
 

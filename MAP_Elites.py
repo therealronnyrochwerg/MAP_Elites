@@ -1,5 +1,5 @@
 from .parent_selection import select_parent
-from .centroids import create_centroids, closest_centroid, shift_centroid
+from .centroids import create_centroids, closest_centroid, shift_centroid, compare_ind
 import numpy as np
 
 class MAPElites (object):
@@ -36,9 +36,10 @@ class MAPElites (object):
             # if there is already an individual in the niche
             if self.mapE[chosen_centroid]:
                 # if the new individual has higher fitness
-                if individual.fitness > self.mapE[chosen_centroid].fitness:
-                    # replace the old individual and shift the centroid according the new behavior
-                    self.mapE[chosen_centroid] = individual
+                chosen_ind = compare_ind(self.param, [individual, self.mapE[chosen_centroid]], self.gen_centroids[chosen_centroid])
+                if chosen_ind is not None:
+                # replace the old individual and shift the centroid according the new behavior
+                    self.mapE[chosen_centroid] = chosen_ind
                     self.cur_centroids[chosen_centroid] = shift_centroid(self.cur_centroids[chosen_centroid], individual.behavior)
             else:
                 # if there is no individual, add and shift

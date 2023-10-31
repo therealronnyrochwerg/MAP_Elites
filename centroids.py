@@ -2,6 +2,7 @@ from scipy.spatial import distance as dist
 from numpy.linalg import matrix_rank, norm
 import numpy as np
 from numpy.random import default_rng, random
+from .parent_selection import lexicase
 
 # function to create a matrix of centroids
 def create_centroids(num_samples, num_niches, rng):
@@ -47,6 +48,13 @@ def closest_centroid(centroids, vector):
     distances = dist.cdist(centroids, vector, 'cosine')
 
     return np.argmin(distances)
+
+def compare_ind(param, individuals, centroid):
+    if param.comparison_method == 'fitness':
+        return sorted(individuals, key=lambda x: x.fitness)[-1]
+    elif param.comparison_method == 'lexicase':
+        order = sorted(range(len(centroid)), key=lambda x: abs(centroid[x]), reverse=True)
+        return lexicase(individuals, param.input_data[order,:], param.target_data[order])
 
 #above is faster, keeping this just in case (above calcs distance into a 2d ndarray)
 # def closest_centroid2(centroids, vector):
